@@ -1,0 +1,576 @@
+{% extends 'layouts/base.html' %}
+
+{% block title %}Hasil Analisis{% endblock %}
+
+{% block content %}
+
+<div class="container-fluid pb-4">
+
+    <!-- TITLE -->
+    <div class="d-flex justify-content-between align-items-center">
+        <div>
+            <h3 class="font-weight-bold">Hasil Analisis Emosi</h3>
+            <p class="text-muted">Ringkasan analisis emosi dari komentar YouTube</p>
+        </div>
+        <div class="d-flex gap-2 mb-3">
+            {% if mode == 'topik' %}
+            <a href="/hasil" class="btn btn-mode mr-2">
+                <i class="bi bi-graph-up"></i> Mode Umum
+            </a>
+            <a href="/hasil?mode=topik" class="btn btn-mode active">
+                <i class="bi bi-tags"></i> Mode Topik
+            </a>
+            {% else %}
+            <a href="/hasil" class="btn btn-mode active mr-2">
+                <i class="bi bi-graph-up"></i> Mode Umum
+            </a>
+            <a href="/hasil?mode=topik" class="btn btn-mode">
+                <i class="bi bi-tags"></i> Mode Topik
+            </a>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- TAB -->
+    <ul class="nav nav-tabs mt-3">
+        <li class="nav-item">
+            <a class="nav-link active" data-toggle="tab" href="#ringkasan">Ringkasan Analisis</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" data-toggle="tab" href="#detail">Detail Komentar</a>
+        </li>
+    </ul>
+
+    <div class="tab-content mt-3">
+
+        <!-- ================= TAB 1 ================= -->
+        <div class="tab-pane fade show active" id="ringkasan">
+
+            <!-- CARD -->
+            <div class="row mb-4">
+
+                <div class="col-md-4">
+                    <div class="card shadow-sm">
+                        <div class="card-body p-4">
+                            <div class="d-flex align-items-center mb-3">
+                                <div class="icon-box icon-box-primary">
+                                    <i class="bi bi-chat-dots-fill"></i>
+                                </div>
+                            </div>
+                            <p class="text-muted mb-1">Total Komentar</p>
+                            <h2 class="font-weight-bold" style="color: #193B68;">{{ total_data }}</h2>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <div class="card shadow-sm">
+                        <div class="card-body p-4">
+                            <div class="d-flex align-items-center mb-3">
+                                <div class="icon-box icon-box-success">
+                                    <i class="bi bi-emoji-smile-fill"></i>
+                                </div>
+                            </div>
+                            <p class="text-muted mb-1">Emosi Dominan</p>
+                            <h2 class="text-success">{{ emosi_dominan }}</h2>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <div class="card shadow-sm">
+                        <div class="card-body p-4">
+                            <div class="d-flex align-items-center mb-3">
+                                <div class="icon-box icon-box-danger">
+                                    <i class="bi bi-emoji-frown-fill"></i>
+                                </div>
+                            </div>
+                            <p class="text-muted mb-1">Emosi Terendah</p>
+                            <h2 class="text-danger">{{ emosi_terendah }}</h2>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- CHART -->
+            <div class="row mb-4">
+
+                <!-- PIE -->
+                <div class="col-md-6">
+                    <div class="card shadow-sm h-100">
+                        <div class="card-header bg-white border-bottom d-flex align-items-center">
+                            <h5 class="mb-0">Distribusi Emosi</h5>
+
+                            <!-- Filter Video -->
+                            {% if emosi_per_video|length > 1 %}
+                            <div class="ml-auto mt-2 mt-md-0">
+                                <select id="filterVideoChart" class="form-control form-control-sm"
+                                    style="width: 180px;">
+                                    <option value="all">Semua Video</option>
+                                    {% for video_id in emosi_per_video.keys() %}
+                                    <option value="{{ video_id }}">Video {{ loop.index }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="card-body text-center">
+                            <div style="width: 100%; height: 300px;">
+                                <canvas id="pieChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- BAR -->
+                <div class="col-md-6">
+                    <div class="card shadow-sm h-100">
+                        <div class="card-header bg-white border-bottom">
+                            <h5 class="mb-0">Perbandingan Emosi</h5>
+                        </div>
+                        <div class="card-body">
+                            <div style="width: 100%; height: 300px;">
+                                <canvas id="barChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- KETERANGAN -->
+            <div class="text-left mb-4">
+                <small class="text-muted" style="font-size: 15px;">
+                    * Positif dan negatif merupakan label hasil hierarchical sentiment pada kasus skor emosi yang sama.
+                </small>
+            </div>
+
+            <!-- Perbandingan emosi per video -->
+            {% if emosi_per_video|length > 1 %}
+            <div class="card shadow-sm mb-4">
+                <div class="card-header text-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="fas fa-chart-line mr-2"></i>
+                        Perbandingan Emosi per Video
+                    </h5>
+                </div>
+
+                <div class="card-body">
+                    <div style="width: 100%; height: 400px;">
+                        <canvas id="videoComparisonChart"></canvas>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- TABEL EMOSI -->
+            <div class="card shadow-sm">
+                <div class="card-header text-white">
+                    <h5 class="mb-0">Tabel Hasil Analisis</h5>
+                </div>
+
+                <table class="table table-hover table-bordered mb-0">
+                    <thead class="thead-light">
+                        <tr>
+                            <th width="50" class="text-center">No</th>
+                            <th>Emosi</th>
+                            <th>Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for label, value in data_emosi.items() %}
+                        <tr>
+                            <td>{{ loop.index }}</td>
+                            <td>{{ label }}</td>
+                            <td>{{ value }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+        </div>
+
+        <!-- ================= TAB 2 ================= -->
+        <div class="tab-pane fade" id="detail">
+
+            <div class="card shadow-sm">
+                <div class="card-header text-white">
+                    <h5 class="mb-0">Detail Komentar & Emosi</h5>
+                </div>
+
+                <!-- Keterangan -->
+                <div class="px-3 py-2 bg-light border-bottom">
+                    <small class="text-muted">
+                        * Kata pada kolom preprocessing ditandai sesuai emosi hasil klasifikasi.
+                        Label positif dan negatif merupakan hasil hierarchical sentiment sehingga tidak memiliki kata
+                        penanda langsung pada kamus emosi.
+                    </small>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table table-hover table-bordered mb-0 detail-table">
+                        <thead class="thead-light">
+                            <tr>
+                                <th>No</th>
+                                <th>Komentar</th>
+                                <th>Preprocessing</th>
+                                <th>Emosi</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in data_komentar %}
+                            <tr>
+                                <td>{{ loop.index }}</td>
+                                <td>{{ item.komentar }}</td>
+                                <td class="text-muted">{{ item.preprocessing_highlight | safe }}</td>
+                                <td>
+                                    {% if item.emosi == 'anger' %}
+                                    <span class="badge" style="background-color: #E63946; color: white;">{{ item.emosi
+                                        }}</span>
+                                    {% elif item.emosi == 'fear' %}
+                                    <span class="badge" style="background-color: #6A4C93; color: white;">{{ item.emosi
+                                        }}</span>
+                                    {% elif item.emosi == 'sadness' %}
+                                    <span class="badge" style="background-color: #4A90D9; color: white;">{{ item.emosi
+                                        }}</span>
+                                    {% elif item.emosi == 'disgust' %}
+                                    <span class="badge" style="background-color: #2D6A4F; color: white;">{{ item.emosi
+                                        }}</span>
+                                    {% elif item.emosi == 'anticipation' %}
+                                    <span class="badge" style="background-color: #F4A261; color: white;">{{ item.emosi
+                                        }}</span>
+                                    {% elif item.emosi == 'joy' %}
+                                    <span class="badge" style="background-color: #F9C74F; color: black;">{{ item.emosi
+                                        }}</span>
+                                    {% elif item.emosi == 'surprise' %}
+                                    <span class="badge" style="background-color: #43AA8B; color: white;">{{ item.emosi
+                                        }}</span>
+                                    {% elif item.emosi == 'trust' %}
+                                    <span class="badge" style="background-color: #90BE6D; color: white;">{{ item.emosi
+                                        }}</span>
+                                    {% elif item.emosi == 'positif' %}
+                                    <span class="badge" style="background-color: #2A9D8F; color: white;">{{ item.emosi
+                                        }}</span>
+                                    {% elif item.emosi == 'negatif' %}
+                                    <span class="badge" style="background-color: #C1121F; color: white;">{{ item.emosi
+                                        }}</span>
+                                    {% else %}
+                                    <span class="badge" style="background-color: #ADB5BD; color: white;">{{ item.emosi
+                                        }}</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+
+        const labels = JSON.parse('{{ labels | tojson }}');
+        const values = JSON.parse('{{ values | tojson | safe }}');
+        const emosiPerVideo = JSON.parse('{{ emosi_per_video | tojson | safe }}');
+
+        const emotionColors = {
+            'anger': '#E63946',
+            'fear': '#6A4C93',
+            'sadness': '#4A90D9',
+            'disgust': '#2D6A4F',
+            'anticipation': '#F4A261',
+            'joy': '#F9C74F',
+            'surprise': '#43AA8B',
+            'trust': '#90BE6D',
+            'netral': '#ADB5BD',
+
+            //Label hasil hirarchical sentiment
+            'positif': "#2A9D8F",
+            'negatif': "#C1121F"
+        };
+
+        const colors = labels.map(l =>
+            emotionColors[String(l).toLowerCase().trim()] || '#ADB5BD'
+        );
+
+        // PIE
+        const pieChart = new Chart(document.getElementById('pieChart'), {
+            type: 'pie',
+            data: {
+                labels: labels,
+                datasets: [{
+                    data: values,
+                    backgroundColor: colors
+                }]
+            },
+            options: {
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            usePointStyle: true,
+                            pointStyle: 'circle'
+                        }
+                    }
+                }
+            }
+        });
+
+        // BAR
+        const barChart = new Chart(document.getElementById('barChart'), {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    data: values,
+                    backgroundColor: colors
+                }]
+            },
+            options: {
+                plugins: { legend: { display: false } }
+            }
+        });
+
+        // ==============================
+        // FILTER DISTRIBUSI & PERBANDINGAN EMOSI
+        // ==============================
+        const filterVideoChart = document.getElementById('filterVideoChart');
+
+        // Ambil tbody dari tabel hasil analisis
+        const tabelAnalisisBody = document.querySelector(
+            '#ringkasan .card:last-of-type tbody'
+        );
+
+        // Simpan isi tabel awal (Semua Video)
+        const originalTableHTML = tabelAnalisisBody
+            ? tabelAnalisisBody.innerHTML
+            : '';
+
+        if (filterVideoChart) {
+            filterVideoChart.addEventListener('change', function () {
+                const selectedVideo = this.value;
+
+                let newLabels = [];
+                let newValues = [];
+                let newColors = [];
+
+                // Jika pilih semua video
+                if (selectedVideo === 'all') {
+                    newLabels = labels;
+                    newValues = values;
+                    newColors = colors;
+                } else {
+                    // Data emosi video terpilih
+                    const dataVideo = emosiPerVideo[selectedVideo] || {};
+
+                    // Ambil hanya emosi dengan nilai > 0
+                    newLabels = Object.keys(dataVideo).filter(
+                        key => dataVideo[key] > 0
+                    );
+
+                    newValues = newLabels.map(
+                        label => dataVideo[label]
+                    );
+
+                    newColors = newLabels.map(
+                        label => emotionColors[String(label).toLowerCase().trim()] || '#ADB5BD'
+                    );
+                }
+
+                // Update Pie Chart
+                pieChart.data.labels = newLabels;
+                pieChart.data.datasets[0].data = newValues;
+                pieChart.data.datasets[0].backgroundColor = newColors;
+                pieChart.update();
+
+                // Update Bar Chart
+                barChart.data.labels = newLabels;
+                barChart.data.datasets[0].data = newValues;
+                barChart.data.datasets[0].backgroundColor = newColors;
+                barChart.update();
+
+                // ==============================
+                // UPDATE TABEL HASIL ANALISIS
+                // ==============================
+                if (tabelAnalisisBody) {
+                    if (selectedVideo === 'all') {
+                        // Kembalikan tabel awal
+                        tabelAnalisisBody.innerHTML = originalTableHTML;
+                    } else {
+                        const dataVideo = emosiPerVideo[selectedVideo] || {};
+
+                        let html = '';
+                        let no = 1;
+
+                        Object.entries(dataVideo).forEach(([emosi, total]) => {
+                            if (total > 0) {
+                                html += `
+                            <tr>
+                                <td class="text-center">${no++}</td>
+                                <td>${emosi}</td>
+                                <td>${total}</td>
+                            </tr>
+                        `;
+                            }
+                        });
+
+                        if (html === '') {
+                            html = `
+                        <tr>
+                            <td colspan="3" class="text-center text-muted">
+                                Tidak ada data
+                            </td>
+                        </tr>
+                    `;
+                        }
+
+                        tabelAnalisisBody.innerHTML = html;
+                    }
+                }
+            });
+        }
+
+        // ==============================
+        // PERBANDINGAN EMOSI PER VIDEO
+        // ==============================
+        const videoCanvas = document.getElementById('videoComparisonChart');
+
+        if (videoCanvas &&
+            emosiPerVideo &&
+            Object.keys(emosiPerVideo).length > 1
+        ) {
+            const videoLabels = Object.keys(emosiPerVideo);
+
+            //const shortLabels = videoLabels.map(id =>
+                //id.length > 8 ? id.substring(0, 8) + '...' : id
+            //);
+
+            const semuaEmosi = [
+                'anger',
+                'anticipation',
+                'disgust',
+                'fear',
+                'joy',
+                'sadness',
+                'surprise',
+                'trust',
+                'positif',
+                'negatif',
+                'netral'
+            ];
+
+            // Ambil hanya emosi yang memiliki nilai > 0
+            const emosiAktif = semuaEmosi.filter(emosi => {
+                return videoLabels.some(videoId =>
+                    (emosiPerVideo[videoId][emosi] || 0) > 0
+                );
+            });
+
+            const datasets = videoLabels.map((videoId, index) => {
+                // Warna masing-masing video
+                const palette = [
+                    '#4E79A7',
+                    '#E15759',
+                    '#59A14F',
+                    '#F28E2B',
+                    '#B07AA1',
+                    '#76B7B2',
+                    '#EDC948',
+                    '#9C755F',
+                    '#2A9D8F',
+                    '#C1121F',
+                    '#BAB0AC'
+
+                ];
+                return {
+                    label: `Video ${index + 1}`,
+                    data: emosiAktif.map(
+                        emosi => emosiPerVideo[videoId][emosi] || 0
+                    ),
+                    backgroundColor: palette[index % palette.length],
+                    borderRadius: 4,
+                    barPercentage: 0.8,
+                    categoryPercentage: 0.7
+                };
+            });
+
+            new Chart(videoCanvas, {
+                type: 'bar',
+                data: {
+                    labels: emosiAktif,
+                    datasets: datasets
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: {
+                        mode: 'index',
+                        intersect: false
+                    },
+
+                    scales: {
+                        x: {
+                            stacked: false,
+                            title: {
+                                display: true,
+                                text: 'Emosi',
+                                font: {
+                                    weight: 'bold'
+                                }
+                            },
+                            ticks: {
+                                maxRotation: 45,
+                                minRotation: 0
+                            }
+                        },
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                precision: 0
+                            },
+                            title: {
+                                display: true,
+                                text: 'Jumlah Komentar',
+                                font: {
+                                    weight: 'bold'
+                                }
+                            },
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                padding: 20,
+                                usePointStyle: true,
+                                pointStyle: 'circle'
+                            }
+                        },
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false
+                        }
+                    }
+                }
+            });
+        }
+
+    });
+</script>
+
+{% endblock %}

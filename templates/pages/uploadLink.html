@@ -1,0 +1,248 @@
+{% extends 'layouts/base.html' %}
+
+{% block title %}Upload Link{% endblock %}
+
+{% block content %}
+
+<div class="mb-4">
+    <h3 class="font-weight-bold">Upload Link Youtube</h3>
+    <p class="text-muted">Masukkan satu atau beberapa link video YouTube untuk mengambil komentar</p>
+</div>
+
+<!-- FORM INPUT -->
+<div class="card p-4 mb-4 shadow-sm">
+    <form method="POST" id="formYoutube">
+
+        <label class="font-weight-bold mb-2">
+            Link YouTube <span class="text-danger">*</span>
+        </label>
+
+        <!-- Container input link -->
+        <div id="linkContainer">
+
+            <!-- Input pertama -->
+            <div class="input-group mb-2 link-group">
+                <div class="input-group-prepend">
+                    <span class="input-group-text bg-white">
+                        <i class="bi bi-link-45deg text-muted"></i>
+                    </span>
+                </div>
+
+                <input
+                    type="text"
+                    name="link"
+                    class="form-control border-left-0"
+                    placeholder="https://youtube.com/..."
+                    required
+                >
+
+                <!-- Tombol tambah -->
+                <div class="input-group-append">
+                    <button
+                        type="button"
+                        class="btn btn-outline-primary btn-add"
+                        title="Tambah link"
+                    >
+                        <i class="bi bi-plus-lg"></i>
+                    </button>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Tombol Submit -->
+        <div class="text-right mt-3">
+            <button type="submit" class="btn btn-dark px-4">
+                <i class="fas fa-upload mr-1"></i>
+                Submit
+            </button>
+        </div>
+
+    </form>
+</div>
+
+
+<!-- RINGKASAN -->
+{% if total_komentar is defined and total_komentar > 0 %}
+<div class="row mb-4">
+    <div class="col-md-4 mb-3">
+        <div class="card shadow-sm border-0">
+            <div class="card-body">
+                <h6 class="text-muted mb-1">Total Video</h6>
+                <h3 class="font-weight-bold mb-0">{{ total_videos }}</h3>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4 mb-3">
+        <div class="card shadow-sm border-0">
+            <div class="card-body">
+                <h6 class="text-muted mb-1">Total Komentar</h6>
+                <h3 class="font-weight-bold mb-0">{{ total_komentar }}</h3>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4 mb-3">
+        <div class="card shadow-sm border-0">
+            <div class="card-body">
+                <h6 class="text-muted mb-1">Halaman</h6>
+                <h3 class="font-weight-bold mb-0">{{ page }} / {{ total_pages }}</h3>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- TABEL -->
+{% if data %}
+<div class="card shadow-sm">
+    <div class="card-header text-white d-flex justify-content-between align-items-center">
+        <h5 class="mb-0"><i class="fas fa-comments mr-2"></i>Tabel Data Komentar</h5>
+
+        {% if total_videos %}
+        <span class="badge badge-light text-dark px-3 py-2">
+            {{ total_videos }} Video
+        </span>
+        {% endif %}
+    </div>
+
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover table-bordered mb-0">
+                <thead class="thead-light">
+                    <tr>
+                        <th width="50" class="text-center">No</th>
+                        <th width="130" class="text-center">Video ID</th>
+                        <th width="150">Waktu</th>
+                        <th>Komentar</th>
+                        <th width="80" class="text-center">Likes</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for d in data %}
+                    <tr>
+                        <td class="text-center text-muted">
+                            {{ (page-1)*10 + loop.index }}
+                        </td>
+                        <td class="align-middle text-center">
+                            <span class="badge badge-secondary px-2 py-1">
+                                {{ d.video_id }}
+                            </span>
+                        </td>
+                        <td class="text-muted small">{{ d.waktu }}</td>
+                        <td>{{ d.komentar }}</td>
+                        <td class="likes-cell">
+                            <span class="badge badge-light border likes-badge">
+                                <i class="fas fa-thumbs-up text-muted mr-1"></i>{{ d.likes }}
+                            </span>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- PAGINATION & BUTTON -->
+    <div class="card-footer d-flex justify-content-between align-items-center">
+
+        <!-- PAGINATION KIRI -->
+        <div class="d-flex align-items-center">
+            {% if page > 1 %}
+            <a href="?page={{ page-1 }}" class="btn btn-sm btn-outline-dark d-flex justify-content-center"
+                style="width:32px; height:32px;">&lt;</a>
+            {% else %}
+            <button class="btn btn-sm btn-outline-secondary mr-2 d-flex justify-content-center"
+                style="width:32px; height:32px;" disabled>&lt;</button>
+            {% endif %}
+
+            <span class="mx-2">Halaman <strong>{{ page }}</strong> dari <strong>{{ total_pages
+                    }}</strong></span>
+
+            {% if page < total_pages %} <a href="?page={{ page+1 }}"
+                class="btn btn-sm btn-outline-dark d-flex justify-content-center" style="width:32px; height:32px;">
+                &gt;</a>
+                {% else %}
+                <button class="btn btn-sm btn-outline-secondary ml-2 d-flex justify-content-center"
+                    style="width:32px; height:32px;" disabled>&gt;</button>
+                {% endif %}
+        </div>
+
+        <!-- BUTTON ANALISIS -->
+        <a href="/hasil" class="btn btn-dark px-4">
+            <i class="fas fa-chart-bar mr-1"></i> Lanjutkan Analisis
+        </a>
+
+    </div>
+</div>
+
+
+{% endif %}
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const container = document.getElementById("linkContainer");
+   
+    if (!container) return;
+
+    // Event delegation
+    container.addEventListener("click", function (e) {
+
+        // Tombol tambah
+        const addBtn = e.target.closest(".btn-add");
+        if (addBtn) {
+            e.preventDefault();
+            // Ubah tombol tambah sebelumnya menjadi tombol hapus
+            addBtn.classList.remove("btn-outline-primary", "btn-add");
+            addBtn.classList.add("btn-outline-danger", "btn-remove");
+            addBtn.innerHTML = '<i class="bi bi-trash"></i>';
+            addBtn.title = "Hapus link";
+
+            // Tambahkan input baru
+            const newGroup = document.createElement("div");
+            newGroup.className = "input-group mb-2 link-group";
+
+            newGroup.innerHTML = `
+                <div class="input-group-prepend">
+                    <span class="input-group-text bg-white">
+                        <i class="bi bi-link-45deg text-muted"></i>
+                    </span>
+                </div>
+
+                <input
+                    type="text"
+                    name="link"
+                    class="form-control border-left-0"
+                    placeholder="https://youtube.com/..."
+                    required
+                >
+
+                <div class="input-group-append">
+                    <button
+                        type="button"
+                        class="btn btn-outline-primary btn-add"
+                        title="Tambah link"
+                    >
+                        <i class="bi bi-plus-lg"></i>
+                    </button>
+                </div>
+            `;
+
+            container.appendChild(newGroup);
+            return;
+        }
+
+        // Tombol hapus
+        const removeBtn = e.target.closest(".btn-remove");
+        if (removeBtn) {
+            e.preventDefault()
+            removeBtn.closest(".link-group").remove();
+        }
+    });
+});
+</script>
+{% endblock %}

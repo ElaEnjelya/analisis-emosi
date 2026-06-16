@@ -1,0 +1,126 @@
+{% extends 'layouts/base.html' %}
+
+{% block title %}Kamus Emosi{% endblock %}
+
+{% block content %}
+
+<div class="mb-4">
+    <h3 class="font-weight-bold">Kamus Emosi</h3>
+    <p class="text-muted">Cari kata untuk mengetahui label emosinya</p>
+</div>
+
+<!-- SEARCH BAR -->
+<div class="card shadow-sm p-4 mb-4">
+    <form method="POST">
+        <label class="font-weight-bold mb-1">Kata <span class="text-danger">*</span></label>
+        <div class="input-group">
+            <div class="input-group-prepend">
+                <span class="input-group-text bg-white">
+                    <i class="bi bi-search text-muted"></i>
+                </span>
+            </div>
+            <input type="text" name="kata" id="kataInput" class="form-control border-left-0"
+                placeholder="Masukkan kata..." autocomplete="off" value="{{ kata_input }}">
+            <div class="input-group-append">
+                <button class="btn px-4">Cari</button>
+            </div>
+        </div>
+    </form>
+</div>
+
+<!--AUTOCOMPLETE-->
+        <div style="position: relative; z-index: 9999;">
+            <div id="suggestions" class="list-group"
+                style="position: absolute; z-index: 9999; width: 100%; top: 0; background: white; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+            </div>
+        </div>
+
+<!-- HASIL -->
+{% if hasil %}
+<div class="card shadow-sm">
+    <div class="card-header text-white">
+        <h5 class="mb-0"><i class="fas fa-search mr-2"></i>Hasil Pencarian</h5>
+    </div>
+    <div class="card-body p-0">
+        <table class="table table-hover table-bordered mb-0">
+            <thead class="thead-light">
+                <tr>
+                    <th>Kata</th>
+                    <th>Label Emosi</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>{{ kata_input }}</td>
+                    <td>
+                        {% if hasil|lower == "netral" %}
+                        <span class="badge badge-secondary">{{ hasil }}</span>
+                        {% else %}
+                        {% for emosi in hasil.split(', ') %}
+                        {% if emosi == 'fear' %}
+                        <span class="badge" style="background-color: #6f42c1; color: white;">{{ emosi }}</span>
+                        {% elif emosi == 'sadness' %}
+                        <span class="badge" style="background-color: #0d6efd; color: white;">{{ emosi }}</span>
+                        {% elif emosi == 'anger' %}
+                        <span class="badge" style="background-color: #dc3545; color: white;">{{ emosi }}</span>
+                        {% elif emosi == 'joy' %}
+                        <span class="badge" style="background-color: #ffc107; color: black;">{{ emosi }}</span>
+                        {% elif emosi == 'anticipation' %}
+                        <span class="badge" style="background-color: #fd7e14; color: white;">{{ emosi }}</span>
+                        {% elif emosi == 'disgust' %}
+                        <span class="badge" style="background-color: #198754; color: white;">{{ emosi }}</span>
+                        {% elif emosi == 'surprise' %}
+                        <span class="badge" style="background-color: #0dcaf0; color: black;">{{ emosi }}</span>
+                        {% elif emosi == 'trust' %}
+                        <span class="badge" style="background-color: #20c997; color: white;">{{ emosi }}</span>
+                        {% else %}
+                        <span class="badge badge-secondary">{{ emosi }}</span>
+                        {% endif %}
+                        {% endfor %}
+                        {% endif %}
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endif %}
+
+{% endblock %}
+
+{% block scripts %}
+
+<script>
+    const input = document.getElementById("kataInput");
+    const suggestionsBox = document.getElementById("suggestions");
+
+    input.addEventListener("keyup", function () {
+        let query = input.value;
+
+        if (query.length < 2) {
+            suggestionsBox.innerHTML = "";
+            return;
+        }
+
+        fetch(`/autocomplete?q=${query}`)
+            .then(res => res.json())
+            .then(data => {
+                suggestionsBox.innerHTML = "";
+
+                data.data.forEach(item => {
+                    let div = document.createElement("a");
+                    div.classList.add("list-group-item", "list-group-item-action");
+                    div.textContent = item;
+
+                    div.onclick = function () {
+                        input.value = item;
+                        suggestionsBox.innerHTML = "";
+                    };
+
+                    suggestionsBox.appendChild(div);
+                });
+            });
+    });
+</script>
+
+{% endblock %}
