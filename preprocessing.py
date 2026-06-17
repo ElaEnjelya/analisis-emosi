@@ -38,7 +38,7 @@ custom_stopwords = {
     'aja', 'nih', 'deh', 'loh', 'ku', 'ya', 'bro', 'bos', 'guys'
 }
 
-stop_words = stop_words.union(custom_stopwords)
+stop_words = stop_words.union(custom_stopwords) 
 
 # ======================
 # stemming
