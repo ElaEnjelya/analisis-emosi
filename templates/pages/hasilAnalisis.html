@@ -185,6 +185,10 @@
                             <td>{{ label }}</td>
                             <td>{{ value }}</td>
                         </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="3" class="text-center text-muted">Belum ada data yang dianalisis</td>
+                        </tr>
                         {% endfor %}
                     </tbody>
                 </table>
@@ -261,6 +265,10 @@
                                         }}</span>
                                     {% endif %}
                                 </td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="4" class="text-center text-muted">Belum ada komentar</td>
                             </tr>
                             {% endfor %}
                         </tbody>

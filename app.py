@@ -364,17 +364,22 @@ def hasil():
 
     # handle kalau data kosong
     if not data_emosi:
-        data_emosi = {"netral": 1}
+        data_emosi = {}
+        total_data = 0
+        emosi_dominan = "-"
+        emosi_terendah = "-"
+        labels = []
+        values = []
+    else:
+        # hitung total
+        total_data = sum(data_emosi.values())
 
-    # hitung total
-    total_data = sum(data_emosi.values())
+        # cari emosi dominan dan terendah
+        emosi_dominan = max(data_emosi, key=data_emosi.get)
+        emosi_terendah = min(data_emosi, key=data_emosi.get)
 
-    # cari emosi dominan dan terendah
-    emosi_dominan = max(data_emosi, key=data_emosi.get)
-    emosi_terendah = min(data_emosi, key=data_emosi.get)
-
-    labels = list(data_emosi.keys())
-    values = list(data_emosi.values())
+        labels = list(data_emosi.keys())
+        values = list(data_emosi.values())
     
     # Daftar video unik untuk filter dropdown
     #cursor.execute("SELECT DISTINCT video_id FROM comments")
