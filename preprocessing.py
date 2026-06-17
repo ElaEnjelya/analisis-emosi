@@ -5,7 +5,8 @@ from nltk.corpus import stopwords
 import nltk
 import os
 
-nltk.download('stopwords')
+nltk.data.path.append('/tmp')
+nltk.download('stopwords', download_dir='/tmp')
 
 # ======================
 # load kamus normalisasi

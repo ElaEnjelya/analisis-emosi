@@ -1,7 +1,7 @@
 from flask import Flask, render_template, request
 from urllib.parse import urlparse, parse_qs
 from googleapiclient.discovery import build
-import mysql.connector
+import psycopg2
 import pandas as pd
 import re
 import joblib
@@ -90,18 +90,18 @@ def highlight_by_emotion(text, kamus_nrc, label):
 
 
 # konek database
-db = mysql.connector.connect(
-    host="localhost",
-    user="root",
-    password="",
-    database="emosi_db"
-)
+DATABASE_URL = os.environ.get("DATABASE_URL", "postgresql://postgres:password@localhost:5432/emosi_db")
+try:
+    db = psycopg2.connect(DATABASE_URL)
+    cursor = db.cursor()
 
-cursor = db.cursor()
-
-# data kosong saat run ulang
-cursor.execute("DELETE FROM comments")
-db.commit()
+    # data kosong saat run ulang
+    cursor.execute("DELETE FROM comments")
+    db.commit()
+except Exception as e:
+    print("Database connection error:", e)
+    db = None
+    cursor = None
 
 # ambil video ID dari link Youtube
 def extract_video_id(link):

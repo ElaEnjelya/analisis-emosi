@@ -1,0 +1,9 @@
+Flask
+pandas
+joblib
+scikit-learn
+google-api-python-client
+psycopg2-binary
+Sastrawi
+nltk
+gunicorn
